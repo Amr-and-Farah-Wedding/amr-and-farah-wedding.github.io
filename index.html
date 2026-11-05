@@ -233,7 +233,8 @@ html[lang=ar] .closing .s{font-family:var(--arS);font-size:1.9rem;line-height:1.
 
 <script>
 /* ===== wedding details: replace the example values ===== */
-const EVENT={demo:false,timeKnown:false,start:"2027-03-28T00:00:00+02:00",end:"2027-03-29T00:00:00+02:00",
+const EVENT={demo:false,timeKnown:true,start:"2027-03-28T18:00:00+02:00",end:"2027-03-28T23:59:00+02:00",
+ sheetUrl:"https://script.google.com/macros/s/AKfycbzT_GP0pA0ErR-eG4SlyZqLsqSUyWiwZ3yxaJHfACdp1A6-Hxwbdq4E-wVpt3aySrPB1Q/exec",
  venue:{en:"Casa Maria Villa",ar:"كازا ماريا فيلا"},addr:{en:"Line 2, Orabi, Obour City",ar:"الخط ٢، عرابي، مدينة العبور"},
  mapsUrl:"https://maps.app.goo.gl/pxdS9f2TuK8MiE52A",mapsQuery:"Casa Maria Villa, Line 2, Orabi, Obour City",whatsapp:""};
 
@@ -245,7 +246,7 @@ en:{gTop:"Wedding Invitation",wed:"Wedding Invitation",dateLabel:"The wedding da
  countLabel:"Countdown to our wedding",units:["Days","Hours","Minutes","Seconds"],done:"Today is the day",addcal:"Add to calendar",
   venueLabel:"The wedding will be held at",directions:"Get directions",
  rsvpTitle:"Will you attend our wedding?",rsvpNote:"Please let us know if you can come.",yourName:"Your name",yes:"Yes, I'm coming",no:"Sorry, I can't come",guests:"Number of guests",wish:"A message for the couple (optional)",send:"Send reply",
- needName:"Please write your name first.",saved:"Thank you, your reply has been saved.",toWa:"Send your reply to Amr & Farah on WhatsApp:",wa:"Send on WhatsApp",
+ sending:"Sending your reply…",sendFail:"Your reply was not sent. Check your internet and press Send again.",needName:"Please write your name first.",saved:"Thank you, your reply has been saved.",toWa:"Send your reply to Amr & Farah on WhatsApp:",wa:"Send on WhatsApp",
  ownerT:"Replies so far (only you see this)",coming:"Coming",notComing:"Not coming",people:"guests",none:"No replies yet.",
  closing:"Forever starts with you here",gl:n=>n===1?"1 guest":n+" guests",
  msgY:(n,c,m)=>`Amr & Farah, this is ${n}. I'm coming to your wedding (${c===1?"1 guest":c+" guests"}).${m?"\n"+m:""}`,msgN:(n,m)=>`Amr & Farah, this is ${n}. Sadly I can't come to your wedding. Congratulations!${m?"\n"+m:""}`},
@@ -256,7 +257,7 @@ ar:{gTop:"دعوة زفاف",wed:"دعوة زفاف",dateLabel:"يوم الزف�
  countLabel:"الوقت المتبقي على الفرح",units:["يوم","ساعة","دقيقة","ثانية"],done:"النهاردة الفرح",addcal:"أضف إلى التقويم",
   venueLabel:"حفل الزفاف في",directions:"الاتجاهات على الخريطة",
  rsvpTitle:"هتحضروا فرحنا؟",rsvpNote:"من فضلكم عرّفونا هتقدروا تيجوا ولا لأ.",yourName:"الاسم",yes:"جاي بإذن الله",no:"للأسف مش هقدر",guests:"عدد الأفراد",wish:"رسالة للعروسين (اختياري)",send:"إرسال الرد",
- needName:"من فضلك اكتب اسمك الأول.",saved:"شكرًا، ردك اتسجل.",toWa:"ابعت ردك لعمرو وفرح على واتساب:",wa:"إرسال على واتساب",
+ sending:"جاري إرسال ردك…",sendFail:"ردك ماوصلش. اتأكد من النت ودوس إرسال تاني.",needName:"من فضلك اكتب اسمك الأول.",saved:"شكرًا، ردك اتسجل.",toWa:"ابعت ردك لعمرو وفرح على واتساب:",wa:"إرسال على واتساب",
  ownerT:"الردود لحد دلوقتي (ظاهرة ليك بس)",coming:"جايين",notComing:"مش جايين",people:"فرد",none:"لسه مفيش ردود.",
  closing:"حضوركم يكمّل فرحتنا",gl:n=>n===1?"فرد واحد":n===2?"فردين":toAr(n)+" أفراد",
  msgY:(n,c,m)=>`عمرو وفرح، ألف مبروك! أنا ${n}، جاي الفرح بإذن الله (${T.ar.gl(c)}).${m?"\n"+m:""}`,msgN:(n,m)=>`عمرو وفرح، ألف مبروك! أنا ${n}، وللأسف مش هقدر أحضر.${m?"\n"+m:""}`}
@@ -414,12 +415,19 @@ $("gate").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.prev
 let db=null,me=null,rows=[];
 const attY=$("attY"),attN=$("attN");
 const sync=()=>{$("cWrap").hidden=attN.checked};attY.addEventListener("change",sync);attN.addEventListener("change",sync);
-$("rsvp").addEventListener("submit",async e=>{e.preventDefault();const t=T[lang],res=$("res"),name=$("gName").value.trim(),msg=$("gMsg").value.trim(),yes=attY.checked,c=+$("gCount").value;res.textContent="";res.hidden=false;
- if(!name){const p=document.createElement("p");p.className="err";p.textContent=t.needName;res.append(p);$("gName").focus();return}
- let saved=false;
- if(db&&me){try{await db.doc("rsvps/"+me).set({name,coming:yes,guests:yes?c:0,message:msg,at:Date.now()});saved=true}catch(err){saved=false}}
- const p=document.createElement("p");p.textContent=saved?t.saved:t.toWa;res.append(p);
- if(!saved||EVENT.whatsapp){const a=document.createElement("a");a.className="btn";a.target="_blank";a.rel="noopener";a.textContent=t.wa;a.href="https://wa.me/"+EVENT.whatsapp+"?text="+encodeURIComponent(yes?t.msgY(name,c,msg):t.msgN(name,msg));res.append(a)}
+function sendToSheet(d){return new Promise(res=>{if(!EVENT.sheetUrl)return res(false);const cb="rsvp"+Date.now(),tag=document.createElement("script");let done=false;
+ const fin=ok=>{if(done)return;done=true;clearTimeout(tm);try{delete window[cb]}catch(e){window[cb]=void 0}tag.remove();res(ok)};
+ const tm=setTimeout(()=>fin(false),25000);window[cb]=()=>fin(true);tag.onerror=()=>fin(false);
+ tag.src=EVENT.sheetUrl+"?"+new URLSearchParams({name:d.name,coming:d.coming?"1":"0",guests:String(d.guests),message:d.message,cb}).toString();document.body.append(tag)})}
+let sending=false;
+$("rsvp").addEventListener("submit",async e=>{e.preventDefault();if(sending)return;const t=T[lang],res=$("res"),btn=e.target.querySelector("button[type=submit]"),name=$("gName").value.trim(),msg=$("gMsg").value.trim(),yes=attY.checked,c=+$("gCount").value;res.textContent="";res.hidden=false;
+ const say=(x,cl)=>{const p=document.createElement("p");if(cl)p.className=cl;p.textContent=x;res.append(p)};
+ if(!name){say(t.needName,"err");$("gName").focus();return}
+ sending=true;btn.disabled=true;say(t.sending);
+ let saved=await sendToSheet({name,coming:yes,guests:yes?c:0,message:msg});
+ if(!saved&&db&&me){try{await db.doc("rsvps/"+me).set({name,coming:yes,guests:yes?c:0,message:msg,at:Date.now()});saved=true}catch(err){saved=false}}
+ res.textContent="";sending=false;btn.disabled=false;
+ if(saved){say(t.saved);e.target.querySelector("#gMsg").value=""}else say(t.sendFail,"err");
 });
 function renderOwner(){const box=$("owner");if(box.hidden)return;const t=T[lang],l=$("list");l.textContent="";
  const y=rows.filter(r=>r.coming),n=rows.filter(r=>!r.coming),ppl=y.reduce((s,r)=>s+(+r.guests||0),0);
