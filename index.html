@@ -280,7 +280,7 @@ function setLang(l){lang=l;const t=T[l];document.documentElement.lang=l;document
  document.querySelectorAll("[data-a]").forEach(e=>e.setAttribute("aria-label",t[e.dataset.a]));
  document.querySelectorAll("[data-l]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l===l));
  $("dShort").textContent=l==="ar"?"٢٨ / ٣ / ٢٠٢٧":"28 . 03 . 2027";
- $("when").textContent=fmt({weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · "+fmt({hour:"numeric",minute:"2-digit"});
+ $("when").textContent=l==="ar"?"الأحد ٢٨ مارس ٢٠٢٧ - الساعة ٦:٠٠ مساءً":"Sunday, 28 March 2027 at 6:00 PM";
  const sel=$("gCount"),cur=sel.value||"1";sel.textContent="";for(let i=1;i<=8;i++){const o=document.createElement("option");o.value=i;o.textContent=t.gl(i);sel.append(o)}sel.value=cur;
  $("res").hidden=true;tick();scratchers.forEach(s=>s.redraw())}
 document.querySelectorAll("[data-l]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();setLang(b.dataset.l)}));
