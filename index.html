@@ -36,8 +36,8 @@ html[lang=ar] .btn{font-family:var(--ar)}
 @media (prefers-reduced-motion:no-preference){.env:not(.crack) .seal{animation:pulse 2.4s ease-in-out infinite}@keyframes pulse{50%{transform:translate(-50%,-50%) scale(1.05)}}}
 .seal .mono{position:absolute;inset:0;direction:ltr;font-family:var(--script);font-size:min(17vw,68px);line-height:1;color:#B8924E;text-shadow:0 1px 0 rgba(255,255,255,.7),0 -1px 1px rgba(90,60,20,.35)}
 .seal .mono b{position:absolute;font-weight:400}
-.seal .mono b:first-child{left:27%;top:24%}
-.seal .mono b:last-child{left:49%;top:38%}
+.seal .mono b:first-child{left:24%;top:20%}
+.seal .mono b:last-child{left:46%;top:34%}
 .env.crack .seal{opacity:0;transform:translate(-50%,-50%) scale(1.15);pointer-events:none}
 .env .hint{position:absolute;left:0;right:0;top:calc(50% + min(27vw,118px) + 26px);z-index:5;text-align:center;color:#8C7458;font-size:1rem;letter-spacing:.04em;transition:opacity .6s}
 .env.crack .hint,.env.crack .langs{opacity:0}
@@ -317,6 +317,16 @@ function decEnv(){const b=document.querySelector(".env .box");if(!b)return;const
  o+=`<path d="M0 0L${cx} ${H*.52}L${W} 0" fill="none" stroke="#A8977C" stroke-width="1" opacity=".4"/><path d="M0 ${H}L${cx} ${H*.48}L${W} ${H}" fill="none" stroke="#FFFFFF" stroke-width="1.2" opacity=".8"/>`;
  document.querySelectorAll(".env .dec").forEach(s=>{s.setAttribute("viewBox",`0 0 ${W} ${H}`);s.innerHTML=o})}
 decEnv();addEventListener("resize",decEnv);
+/* ---------- keep the A F monogram exactly centred on the seal, whatever font loads */
+function centerMono(){const m=document.querySelector(".seal .mono");if(!m)return;m.style.transform="";
+ const seal=m.parentElement,sr=seal.getBoundingClientRect(),k=sr.width/seal.offsetWidth||1,cs=getComputedStyle(m.children[0]);
+ const cv=centerMono.c||(centerMono.c=document.createElement("canvas")),x=cv.getContext("2d");x.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+ let L=1e9,T=1e9,R=-1e9,B=-1e9;for(const b of m.children){const r=b.getBoundingClientRect(),t=x.measureText(b.textContent),fs=parseFloat(cs.fontSize)*k;
+  const fa=(t.fontBoundingBoxAscent||fs*.8)*k,fd=(t.fontBoundingBoxDescent||fs*.2)*k,base=r.top+(r.height-(fa+fd))/2+fa;
+  L=Math.min(L,r.left-t.actualBoundingBoxLeft*k);R=Math.max(R,r.left+t.actualBoundingBoxRight*k);T=Math.min(T,base-t.actualBoundingBoxAscent*k);B=Math.max(B,base+t.actualBoundingBoxDescent*k)}
+ const dx=(sr.left+sr.width/2-(L+R)/2)/k,dy=(sr.top+sr.height/2-(T+B)/2)/k;m.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`}
+centerMono();document.fonts&&document.fonts.ready.then(centerMono);addEventListener("load",centerMono);addEventListener("resize",centerMono);
+
 /* ---------- drawn art: beige palace arch, natural roses, pampas and eucalyptus */
 const NS="http://www.w3.org/2000/svg";
 let _sd=7;const rnd=()=>(_sd=(_sd*16807)%2147483647)/2147483647;
